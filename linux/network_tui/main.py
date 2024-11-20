@@ -1,19 +1,30 @@
 from textual.app import App, ComposeResult
-from textual.containers import HorizontalGroup, Vertical, Horizontal
-from textual.widgets import Label, Button, SelectionList, Footer
+from textual.containers import Horizontal
+from textual.widgets import ListItem, ListView, Label, Switch
+
+from wireless import get_networks
 
 
-class NetworkTUI(App):
+class NetworkListApp(App):
 
-    def compose(self) -> ComposeResult:
-        with Horizontal():
-            yield Label("Hello, world!", id='a')
-            yield Label("Hello, world 2!", id='b')
-            yield Label("Hello, world 3!", id='c')
-        with SelectionList
-        yield Footer()
+    def compose(self) -> ComposeResult: 
+        networks = get_networks()
+
+        list_items = []
+        for ssid, signal in networks:
+
+            list_items.append(
+                ListItem(
+                    Horizontal(
+                        Label(f"{ssid} - {signal} dBm"),
+                        Switch()
+                    )
+                )
+            )
+
+        yield ListView(*list_items)
 
 
 if __name__ == "__main__":
-    app = NetworkTUI()
+    app = NetworkListApp()
     app.run()
