@@ -1,21 +1,20 @@
 import os
 import pandas as pd
+import re
 
 def get_networks():
 
-    command = """iw dev wlp2s0 scan | grep 'SSID:\|signal:' | tac"""
+    command = 'iwctl station wlan0 get-networks'
     result = os.popen(command)
     terminal_output = result.read()
 
-    print('Scan completed')
+    text_cleaned = re.sub(r'\x1b\[[0-9;]*m', '', terminal_output)
+    pattern = r"^\s*(?P<Network_name>[\w\.\,\-\_]+(?:[\s\w\-]+)?)\s+(?P<Security>\w+)\s+(?P<Signal>\*+)\s*$"
 
+    matches = re.findall(pattern, text_cleaned, re.MULTILINE)
+    matches = [(network_name.strip(), security, signal) for network_name, security, signal in matches]
+    return [('Network name', 'Security', 'Signal quality')] + matches
 
-    lines = terminal_output.strip().split("\n")
-    networks = []
-    for i in range(0, len(lines), 2):
-        ssid = lines[i].replace("SSID: ", "").strip()
-        signal = lines[i + 1].replace("signal: ", "").replace(" dBm", "").strip()
-        networks.append((ssid, float(signal)))
-
-    return networks
-
+def connect(network_name, passphrase):
+    command = f'iwctl --passphrase "{passphrase}" station wlan0 connect "{network_name}"'
+    result = os.popen(command)
